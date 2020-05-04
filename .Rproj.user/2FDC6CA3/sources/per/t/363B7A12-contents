@@ -1,0 +1,193 @@
+# In this file we'll perform the full analysis on the
+# geofiltered values for the Northern Atlantic stocks of
+# black sea bass, summer flounder, and scup
+# Written for R Version 3.6.1
+
+
+library(tidyverse)
+library(MASS)
+library(lattice)
+
+# Read in the data
+sp_obs_data <- read.csv("data/all_species_north_atlantic_stocks.csv")
+
+# Re-check to see if the data is structured as required
+# How many unique species are in the dataset?
+print(unique(sp_obs_data$sppocean))
+# The answer is 3
+
+# Assigning seasons to the observations based on the month
+sp_obs_data[, "season"] <- NA
+# February to June is Spring
+sp_obs_data$season[sp_obs_data$month %in% c(2,3,4,5)] <- 'Spring'
+# June to September is Summer
+sp_obs_data$season[sp_obs_data$month %in% c(6,7,8)] <- 'Summer'
+# September to January is Fall
+sp_obs_data$season[sp_obs_data$month %in% c(9,10,11,12)] <- 'Fall'
+
+# Assigning common names to the species
+# First an empty column
+sp_obs_data[, "spp_name"] <- NA
+sp_obs_data$spp_name[sp_obs_data$sppocean == 'centropristis striata_Atl'] <- 'black sea bass'
+sp_obs_data$spp_name[sp_obs_data$sppocean == 'paralichthys dentatus_Atl'] <- 'summer flounder'
+sp_obs_data$spp_name[sp_obs_data$sppocean == 'stenotomus chrysops_Atl'] <- 'scup'
+
+# We must first run a Bartlett's test for this
+
+# First let's begin discriminator analysis for species between seasons
+# LDA formula for seasons
+seasons_lda_formula <- formula(season ~ SBT.seasonal + SST.seasonal.mean + SBT.min + SBT.max + SST.max + rugosity + GRAINSIZE)
+
+# 1. Black sea bass
+# Filter black sea bass observations
+sp_obs_bsb <- sp_obs_data %>% filter(spp_name == 'black sea bass')
+
+# Derive the discriminant functions
+sp_lda_bsb <- lda(seasons_lda_formula, data = sp_obs_bsb)
+# Apply the discriminant functions to the data to get DF scores
+lda_values_bsb <- predict(sp_lda_bsb)
+
+lda_df_bsb <- data.frame(lda_values_bsb$x[,1], lda_values_bsb$x[,2], sp_obs_bsb$season)
+# Rename the columns
+columns <- c("LD1", "LD2","season")
+colnames(lda_df_bsb) <- columns
+
+
+# Plot the discriminant functions
+ggplot(lda_df_bsb, aes(x=LD1, y=LD2)) +
+  geom_point(aes(color = factor(season)), show.legend=FALSE) +
+  xlab("DF1 (99.93%)") + ylab("DF2 (0.07%)") +
+  ggtitle("Black Sea Bass") + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("output/bsb_lda.png")
+
+
+# Diagnostics on the descriptive discriminant analysis
+bsb_d_score <- predict(sp_lda_bsb, dimen=2)$x
+histogram(~bsb_d_score[,1] | sp_obs_bsb$season, nint=5, aspect=1/3)
+# There's a better way to do this in the original discriminant analysis article
+
+# Bartlett's test on black sea bass
+bartlett_season_formula <- formula(SBT.seasonal + SST.seasonal.mean + SBT.min + SBT.max + SST.max + rugosity + GRAINSIZE ~ season)
+bartlett.test(bartlett_season_formula, data = sp_obs_bsb)
+  
+  
+# Reach.dscore <- predict(Reach.lda1, dimen=2)$x
+# histogram(~Reach.dscore[,1] | Reach, nint=20, aspect=1/3)
+
+# 2. Scup
+sp_obs_scp <- sp_obs_data %>% filter(spp_name == 'scup')
+
+# Derive the discriminant functions
+sp_lda_scp <- lda(seasons_lda_formula, data = sp_obs_scp)
+# Apply the discriminant functions to the data to get DF scores
+lda_values_scp <- predict(sp_lda_scp)
+
+lda_df_scp <- data.frame(lda_values_scp$x[,1], lda_values_scp$x[,2], sp_obs_scp$season)
+# Rename the columns
+columns <- c("LD1", "LD2","season")
+colnames(lda_df_scp) <- columns
+
+# Plot the discriminant functions
+ggplot(lda_df_scp, aes(x=LD1, y=LD2)) +
+  geom_point(aes(color = factor(season)), show.legend=FALSE) +
+  xlab("DF1 (99.84%)") + ylab("DF2 (0.16%)") +
+  ggtitle("Scup") + theme(plot.title = element_text(hjust = 0.5))
+  
+ggsave("output/scp_lda.png")
+
+bartlett.test(bartlett_season_formula, data = sp_obs_scp)
+
+
+# 3. Summer flounder
+sp_obs_sfl <- sp_obs_data %>% filter(spp_name == 'summer flounder')
+
+# Derive the discriminant functions
+sp_lda_sfl <- lda(seasons_lda_formula, data = sp_obs_sfl)
+# Apply the discriminant functions to the data to get DF scores
+lda_values_sfl <- predict(sp_lda_sfl)
+
+lda_df_sfl <- data.frame(lda_values_sfl$x[,1], lda_values_sfl$x[,2], sp_obs_sfl$season)
+# Rename the columns
+columns <- c("LD1", "LD2","season")
+colnames(lda_df_sfl) <- columns
+
+# Plot the discriminant functions
+ggplot(lda_df_sfl, aes(x=LD1, y=LD2)) +
+  geom_point(aes(color = factor(season)), show.legend=FALSE) +
+  xlab("DF1 (99.92%)") + ylab("DF2 (0.08%)") +
+  ggtitle("Summer Flounder") + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("output/sfl_lda.png")
+
+bartlett.test(bartlett_season_formula, data = sp_obs_sfl)
+
+# It seems that the discriminant functions are doing a good job of discriminating between seasons
+# for individual species
+
+# Now let's see if they can discrminate between the species in a single season
+# My guess is probably not, but we'll see
+# Formula for species
+species_lda_formula <- formula(spp_name ~ SBT.seasonal + SST.seasonal.mean + SBT.min + SBT.max + SST.max + rugosity + GRAINSIZE)
+species_lda_formula_2 <- formula(spp_name ~ rugosity + GRAINSIZE)
+
+# First let's go for fall
+# Filter the season
+sp_obs_fall <- sp_obs_data %>% filter(season=='Fall')
+# Derive the discriminant functions
+sp_lda_fall <- lda(species_lda_formula, data = sp_obs_fall)
+# Apply the discriminant functions to the data to get DF scores
+lda_values_fall <- predict(sp_lda_fall)
+
+lda_df_fall <- data.frame(lda_values_fall$x[,1], lda_values_fall$x[,2], sp_obs_fall$spp_name)
+# Rename the columns
+columns <- c("LD1", "LD2","spp_name")
+colnames(lda_df_fall) <- columns
+
+# Plot the discriminant functions
+ggplot(lda_df_fall, aes(x=LD1, y=LD2)) +
+  geom_point(aes(color = factor(spp_name)), show.legend=FALSE) +
+               xlab("DF1 (87.24%)") + ylab("DF2 (12.76%)") +
+               ggtitle("Fall") + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("output/fall_lda.png")
+
+# Correlation between df scores and variables
+# cor(sp_obs_bsb[c("SST.seasonal.mean","SBT.seasonal","SBT.min","SBT.max","rugosity", "GRAINSIZE")], lda_values_bsb$x)
+
+# Next let's go for spring
+sp_obs_spring <- sp_obs_data %>% filter(season=='Spring')
+# Derive the discriminant functions
+sp_lda_spring <- lda(species_lda_formula, data = sp_obs_spring)
+# Apply the discriminant functions to the data to get DF scores
+lda_values_spring <- predict(sp_lda_spring)
+1
+lda_df_spring <- data.frame(lda_values_spring$x[,1], lda_values_spring$x[,2], sp_obs_spring$spp_name)
+# Rename the columns
+columns <- c("LD1", "LD2","spp_name")
+colnames(lda_df_spring) <- columns
+
+# Plot the discriminant functions
+ggplot(lda_df_spring, aes(x=LD1, y=LD2)) +
+  geom_point(aes(color = factor(spp_name)), show.legend=FALSE) +
+  xlab("DF1 (87.96%)") + ylab("DF2 (12.04%)") +
+  ggtitle("Spring") + theme(plot.title = element_text(hjust = 0.5))
+
+ggsave("output/spring_lda.png")
+
+# As can be seen from the plots, the fact that these species share similar habitats throughout the year
+# is well reflected graphically through discrminant analysis
+
+# Write out the CSV
+write_csv(sp_obs_data, path="data/all_species_north_atlantic_stocks_common_names.csv")
+
+# Correlations between discriminant functions and parameters
+
+# For single species
+# black sea bass
+cor(sp_obs_bsb[c("SST.seasonal.mean","SBT.seasonal","SBT.min","SBT.max","rugosity", "GRAINSIZE")], lda_values_bsb$x)
+# scup
+cor(sp_obs_scp[c("SST.seasonal.mean","SBT.seasonal","SBT.min","SBT.max","rugosity", "GRAINSIZE")], lda_values_scp$x)
+# summer flounder
+cor(sp_obs_sfl[c("SST.seasonal.mean","SBT.seasonal","SBT.min","SBT.max","rugosity", "GRAINSIZE")], lda_values_sfl$x)
+

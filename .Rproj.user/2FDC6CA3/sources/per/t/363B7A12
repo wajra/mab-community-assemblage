@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588532686752.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "469620429",
+    "id" : "363B7A12",
+    "lastKnownWriteTime" : 1588529861,
+    "last_content_update" : 1588529861,
+    "path" : "~/Graduate Studies/Community Dynamics/Review/Community Dynamics Code/CD_code/old_code/p_5_full_analysis.R",
+    "project_path" : "old_code/p_5_full_analysis.R",
+    "properties" : {
+        "cursorPosition" : "69,23",
+        "scrollLine" : "51"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

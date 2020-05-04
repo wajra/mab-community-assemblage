@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1588533584282.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B74D6004",
+    "lastKnownWriteTime" : 4471507363,
+    "last_content_update" : 1588533584282,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "27A06C98",
+        "caption" : "lda_df_fall",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=lda_df_fall&cache_key=27A06C98",
+        "displayedObservations" : 19871,
+        "environment" : "",
+        "expression" : "lda_df_fall",
+        "object" : "lda_df_fall",
+        "preview" : 0,
+        "totalObservations" : 19871,
+        "variables" : 3
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
